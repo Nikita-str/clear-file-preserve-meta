@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use crate::clear_file;
+use crate::change_file_content;
 
 #[test]
 fn test_file_clear() -> std::io::Result<()> {
@@ -23,8 +23,8 @@ fn test_file_clear() -> std::io::Result<()> {
     std::thread::sleep(std::time::Duration::from_secs(3));
 
     // clear file preserve md:
-    let clear_str = "#[error]";
-    clear_file(path, clear_str)?;
+    let new_content = "#[error]";
+    change_file_content(path, new_content)?;
 
     // slightly await:
     std::thread::sleep(std::time::Duration::from_secs(2));
@@ -41,7 +41,7 @@ fn test_file_clear() -> std::io::Result<()> {
     std::fs::File::open(path)?.read_to_string(&mut new_file_content)?;
     
     // assert that file content changed:
-    assert_eq!(new_file_content, clear_str);
+    assert_eq!(new_file_content, new_content);
 
     Ok(())
 }

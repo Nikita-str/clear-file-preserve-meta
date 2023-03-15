@@ -16,7 +16,7 @@ fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
     for file_path in &cli.clear {
-        if let Err(err) = cl::clear_file(file_path, &cli.new_content) {
+        if let Err(err) = cl::change_file_content(file_path, &cli.new_content) {
             println!("cant clear file {file_path:?}: {err}")
         }
     }
