@@ -1,8 +1,9 @@
 [package]
 name = "clear_file_preserve_meta"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 filetime = "0.2.20"
 clap = { version = "4.1.8",  features = ["derive"] }
+regex = "1.7.1"

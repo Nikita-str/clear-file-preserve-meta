@@ -15,6 +15,12 @@ struct Cli {
     /// new content for cleared files 
     #[clap(short, long, default_value_t={"\n".into()})]
     new_content: String,
+    /// white list regex for cleared files
+    #[clap(short='w',long="wlr")]
+    white_list_regex: Option<String>,
+    /// regex black list for cleared files
+    #[clap(short='b',long="blr")]
+    black_list_regex: Option<String>,
 }
 
 
@@ -34,7 +40,7 @@ fn main() -> std::io::Result<()> {
         let dir_path = if recursive || non_recursive { &dir_path[1..] } else { dir_path };
 
         if let Err(err) = cl::change_dir_files_content(dir_path, &cli.new_content, recursive) {
-            println!("cant clear file {dir_path:?}: {err}")
+            println!("cant (completely) clear dir {dir_path:?}: {err}")
         }
     }
 

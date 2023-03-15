@@ -4,6 +4,52 @@ mod tests;
 pub use fns::{clear_file, change_file_content}; 
 pub use fns::{clear_dir_files, change_dir_files_content};
 
+pub struct FileRegex {
+    white_list_regex: Option<regex::Regex>,
+    black_list_regex: Option<regex::Regex>,
+}
+impl FileRegex {
+    pub const EMPTY: Self = Self{ white_list_regex: None, black_list_regex: None };
+
+    pub fn new_regex(white: Option<regex::Regex>, black: Option<regex::Regex>) -> Self {
+        Self {
+            white_list_regex: white,
+            black_list_regex: black,
+        }
+    }
+    pub fn new(white: Option<&str>, black: Option<&str>) -> Result<Self, regex::Error> {
+        let white_list_regex = match white {
+            Some(re) => Some(regex::Regex::new(re)?),
+            _ => None,
+        };
+        let black_list_regex = match black {
+            Some(re) => Some(regex::Regex::new(re)?),
+            _ => None,
+        };
+
+        Ok(Self {
+            white_list_regex,
+            black_list_regex,
+        })
+    }
+
+    pub fn is_valid(&self, path: impl AsRef<std::path::Path>) -> bool {
+        if let Some(path) = path.as_ref().to_str() {
+            let white_ok = self.white_list_regex.as_ref()
+                .map(|wl_re|wl_re.is_match(path)).unwrap_or(true);
+            let black_ok = self.black_list_regex.as_ref()
+                .map(|bl_re|!bl_re.is_match(path)).unwrap_or(true);
+            white_ok && black_ok
+        } else {
+            // if there exist white list and path is not UTF-8 => path IS NOT matched to whitelist
+            let white_ok = self.white_list_regex.is_none();
+            // if there exist white list and path is not UTF-8 => path IS matched to blacklist
+            let black_ok = true;
+            white_ok && black_ok
+        }
+    }
+}
+
 mod fns {
     use std::io::Write;
     use std::path::Path;
