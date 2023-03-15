@@ -10,3 +10,4 @@ Cargo.lock
 **/*.rs.bk
 
 /tests/test_file_clear.txt
+/tests/tmp_*
