@@ -61,9 +61,9 @@ impl FileFilter {
                 .map(|bl_re|!bl_re.is_match(path)).unwrap_or(true);
             Some(white_ok && black_ok)
         } else {
-            // if there exist white list and path is not UTF-8 => path IS NOT matched to whitelist
+            // if there exist white list and path is not UTF-8 => path IS NOT matched to whitelist => deny
             let white_ok = self.white_list_regex.is_none();
-            // if there exist white list and path is not UTF-8 => path IS matched to blacklist
+            // if there exist white list and path is not UTF-8 => path IS NOT matched to blacklist => allow
             let black_ok = true;
             Some(white_ok && black_ok)
         }

@@ -3,14 +3,16 @@ mod tests;
 mod file_filter;
 pub use file_filter::FileFilter;
 
-pub use fns::{clear_file, change_file_content}; 
-pub use fns::{clear_dir_files, change_dir_files_content};
+pub use fns::{clear_file_filter_f, clear_file, change_file_cont_filter_f, change_file_content}; 
+pub use fns::{clear_dir_files_filter_f, clear_dir_files, change_dir_files_content};
 
 mod fns {
     use std::io::Write;
     use std::path::Path;
     use std::fs::{File, Metadata};
     use filetime::FileTime;
+    
+    use crate::FileFilter;
 
     // use std::io::Result as ResultIO;
     type ResultIO<T> = std::io::Result<T>;
@@ -29,17 +31,24 @@ mod fns {
     }
 
 
-    pub fn clear_file<F>(path: impl AsRef<Path>, clear_action: F) -> ResultIO<()>
+    pub fn clear_file_filter_f<F>(
+        path: impl AsRef<Path>, 
+        clear_action: F, 
+        file_filter: &FileFilter,
+    ) -> ResultIO<()>
     where F: FnOnce(&mut File, &Metadata) -> ResultIO<()>
     {
         let path = path.as_ref();
+        
+        // `_unchecked` because it checks later (see [link:1] and [link:2])
+        if !file_filter.is_allowed_unchecked(path).unwrap_or(false) { return Ok(()) }
 
-        let md = std::fs::metadata(path)?;
+        let md = std::fs::metadata(path)?; // [link:1]
         let mtime = FileTime::from_system_time(md.modified()?);
         let atime = FileTime::from_system_time(md.accessed()?);
 
         {
-            let mut f = File::create(path)?;
+            let mut f = File::create(path)?; // [link:2]
             clear_action(&mut f, &md)?;
         }
 
@@ -48,15 +57,34 @@ mod fns {
         Ok(())
     }
 
-    pub fn change_file_content(path: impl AsRef<Path>, new_content: &str) -> ResultIO<()> {
+    pub fn clear_file<F>(path: impl AsRef<Path>, clear_action: F) -> ResultIO<()>
+    where F: FnOnce(&mut File, &Metadata) -> ResultIO<()>
+    {
+        clear_file_filter_f(path, clear_action, &FileFilter::EMPTY)
+    }
+    
+    pub fn change_file_cont_filter_f(
+        path: impl AsRef<Path>, 
+        new_content: &str,
+        file_filter: &FileFilter,
+    ) -> ResultIO<()> {
         let clear_action = change_content_act!(new_content);
-        clear_file(path, clear_action)
+        clear_file_filter_f(path, clear_action, file_filter)
+    }
+
+    pub fn change_file_content(path: impl AsRef<Path>, new_content: &str) -> ResultIO<()> {
+        change_file_cont_filter_f(path, new_content, &FileFilter::EMPTY)
     }
 
     //TODO: pub fn clear_file_save_byte_size
 
 
-    pub fn clear_dir_files<F>(path: impl AsRef<Path>, clear_action: F, recursive: bool) -> ResultIO<()>
+    pub fn clear_dir_files_filter_f<F>(
+        path: impl AsRef<Path>, 
+        clear_action: F, 
+        recursive: bool,
+        file_filter: &FileFilter,
+    ) -> ResultIO<()>
     where for <'x> &'x F: FnMut(&mut File, &Metadata) -> ResultIO<()>
     {
         let mut rec_dirs = vec![];
@@ -79,7 +107,7 @@ mod fns {
                 if recursive && path.is_dir() { 
                     rec_dirs.push(path)
                 } else if path.is_file() { 
-                    clear_file(path, &clear_action)?
+                    clear_file_filter_f(path, &clear_action, file_filter)?
                 }
             }
 
@@ -87,6 +115,12 @@ mod fns {
         }
 
         Ok(())
+    }
+
+    pub fn clear_dir_files<F>(path: impl AsRef<Path>, clear_action: F, recursive: bool) -> ResultIO<()>
+    where for <'x> &'x F: FnMut(&mut File, &Metadata) -> ResultIO<()>
+    {
+        clear_dir_files_filter_f(path, clear_action, recursive, &FileFilter::EMPTY)
     }
 
     pub fn change_dir_files_content(path: impl AsRef<Path>, new_content: &str, recursive: bool) -> ResultIO<()> {
