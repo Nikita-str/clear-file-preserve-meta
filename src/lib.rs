@@ -4,7 +4,7 @@ mod file_filter;
 pub use file_filter::FileFilter;
 
 pub use fns::{clear_file_filter_f, clear_file, change_file_cont_filter_f, change_file_content}; 
-pub use fns::{clear_dir_files_filter_f, clear_dir_files, change_dir_files_content};
+pub use fns::{clear_dir_files_filter_f, clear_dir_files, change_dir_files_cont_filter_f, change_dir_files_content};
 
 mod fns {
     use std::io::Write;
@@ -122,9 +122,18 @@ mod fns {
     {
         clear_dir_files_filter_f(path, clear_action, recursive, &FileFilter::EMPTY)
     }
+    
+    pub fn change_dir_files_cont_filter_f(
+        path: impl AsRef<Path>,
+        new_content: &str,
+        recursive: bool,
+        file_filter: &FileFilter,
+    ) -> ResultIO<()> {
+        let clear_action = change_content_act!(new_content);
+        clear_dir_files_filter_f(path, clear_action, recursive, file_filter)
+    }
 
     pub fn change_dir_files_content(path: impl AsRef<Path>, new_content: &str, recursive: bool) -> ResultIO<()> {
-        let clear_action = change_content_act!(new_content);
-        clear_dir_files(path, clear_action, recursive)
+        change_dir_files_cont_filter_f(path, new_content, recursive, &FileFilter::EMPTY)
     }
 }
