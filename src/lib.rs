@@ -1,7 +1,11 @@
 #[cfg(test)]
 mod tests;
+
 mod file_filter;
 pub use file_filter::FileFilter;
+
+pub mod clear_act;
+pub use clear_act::ClearAct;
 
 pub use fns::{clear_file_filter_f, clear_file, change_file_cont_filter_f, change_file_content}; 
 pub use fns::{clear_dir_files_filter_f, clear_dir_files, change_dir_files_cont_filter_f, change_dir_files_content};
