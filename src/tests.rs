@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use crate::change_file_content;
+use crate::ClearAct;
 
 #[test]
 fn test_file_clear() -> std::io::Result<()> {
@@ -24,7 +24,7 @@ fn test_file_clear() -> std::io::Result<()> {
 
     // clear file preserve md:
     let new_content = "#[error]";
-    change_file_content(path, new_content)?;
+    crate::clear_act::ConstChangeContent::new_no_filter(new_content).clear_file(path)?;
 
     // slightly await:
     std::thread::sleep(std::time::Duration::from_secs(2));
