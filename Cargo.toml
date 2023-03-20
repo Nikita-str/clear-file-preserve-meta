@@ -7,3 +7,4 @@ edition = "2021"
 filetime = "0.2.20"
 clap = { version = "4.1.8",  features = ["derive"] }
 regex = "1.7.1"
+path-slash = "0.2.1"
