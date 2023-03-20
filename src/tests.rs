@@ -3,7 +3,6 @@ use crate::ClearFile;
 
 #[test]
 fn test_file_clear() -> std::io::Result<()> {
-
     let dir = "./tests";
     let path = format!("{dir}/test_file_clear.txt");
     let path = path.as_str();

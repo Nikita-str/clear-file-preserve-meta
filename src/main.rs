@@ -22,6 +22,9 @@ struct Cli {
     /// regex black list for cleared files
     #[clap(short='b',long="blr")]
     black_list_regex: Option<String>,
+    /// regex black list for cleared dir
+    #[clap(long="dblr")]
+    dir_black_list_regex: Option<String>,
 }
 
 
@@ -30,11 +33,14 @@ fn main() -> std::io::Result<()> {
     
     let white_list = cli.white_list_regex.as_ref().map(|re|re.as_str());
     let black_list = cli.black_list_regex.as_ref().map(|re|re.as_str());
+    let dir_black_list = cli.dir_black_list_regex.as_ref().map(|re|re.as_str());
 
-    let file_filter = cl::filter::FileFilter::new(white_list, black_list).unwrap_or_else(|err|{
-        panic!("regex error: {err}")
-    });
-    let mut fd_cont_changer = cl::ConstChgContD::new_no_dir_filter(&cli.new_content, &file_filter);
+    let file_filter = cl::filter::FileFilter::new(white_list, black_list)
+        .unwrap_or_else(|err|panic!("regex error: {err}"));
+    let dir_filter = cl::filter::DirFilter::new(None, dir_black_list)
+        .unwrap_or_else(|err|panic!("regex error: {err}"));
+
+    let mut fd_cont_changer = cl::ConstChgContD::new(&cli.new_content, &file_filter, &dir_filter);
 
 
     for file_path in &cli.file_clear {
