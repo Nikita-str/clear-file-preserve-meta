@@ -1,4 +1,5 @@
 use clear_file_preserve_meta as cl;
+use cl::{ClearFile, ClearDir};
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -30,14 +31,14 @@ fn main() -> std::io::Result<()> {
     let white_list = cli.white_list_regex.as_ref().map(|re|re.as_str());
     let black_list = cli.black_list_regex.as_ref().map(|re|re.as_str());
 
-    let file_filter = cl::FileFilter::new(white_list, black_list).unwrap_or_else(|err|{
+    let file_filter = cl::filter::FileFilter::new(white_list, black_list).unwrap_or_else(|err|{
         panic!("regex error: {err}")
     });
-    let file_filter = &file_filter;
+    let mut fd_cont_changer = cl::ConstChgContD::new_no_dir_filter(&cli.new_content, &file_filter);
 
 
     for file_path in &cli.file_clear {
-        if let Err(err) = cl::change_file_cont_filter_f(file_path, &cli.new_content, file_filter) {
+        if let Err(err) = fd_cont_changer.clear_file(file_path) {
             println!("cant clear file {file_path:?}: {err}")
         }
     }
@@ -47,8 +48,9 @@ fn main() -> std::io::Result<()> {
         let non_recursive = dir_path.starts_with("!");
         let recursive = !non_recursive && dir_path.starts_with("+");
         let dir_path = if recursive || non_recursive { &dir_path[1..] } else { dir_path };
-
-        if let Err(err) = cl::change_dir_files_cont_filter_f(dir_path, &cli.new_content, recursive, file_filter) {
+        
+        fd_cont_changer.set_recursive(recursive);
+        if let Err(err) = fd_cont_changer.clear_dir_files(dir_path) {
             println!("cant (completely) clear dir {dir_path:?}: {err}")
         }
     }
